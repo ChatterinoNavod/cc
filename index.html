@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatterino Tutorial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #2c2f33, #1e2124);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #e0e0e0;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .background-effects {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .glow-orb {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(114, 137, 218, 0.9), rgba(114, 137, 218, 0));
+            border-radius: 50%;
+            box-shadow: 0 0 20px 5px rgba(114, 137, 218, 0.5);
+            animation: float-orb 12s infinite ease-in-out;
+            opacity: 0.7;
+        }
+        .glow-orb.large {
+            width: 40px;
+            height: 40px;
+            animation-duration: 18s;
+            box-shadow: 0 0 30px 10px rgba(114, 137, 218, 0.6);
+        }
+        .glow-orb:nth-child(odd) {
+            animation-delay: -3s;
+        }
+        .glow-orb:nth-child(even) {
+            animation-delay: -6s;
+        }
+        @keyframes float-orb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(-100px, 150px) scale(1.3); }
+            50% { transform: translate(120px, -100px) scale(0.8); }
+            75% { transform: translate(-50px, -120px) scale(1.1); }
+        }
+        .sparkle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ffffff;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: sparkle 5s infinite ease-in-out;
+        }
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.5); }
+            50% { opacity: 0.8; transform: scale(1.2); }
+        }
+        .stickman {
+            position: fixed;
+            bottom: 20px;
+            left: 50px;
+            width: 100px;
+            height: 150px;
+            z-index: 5;
+            cursor: pointer;
+        }
+        .stickman svg {
+            width: 100%;
+            height: 100%;
+            pointer-events: auto;
+        }
+        .header {
+            background: linear-gradient(90deg, #4e54c8, #8f94fb);
+            padding: 15px 0;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(78, 84, 200, 0.4);
+        }
+        .nav {
+            background-color: #23272a;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+        .nav a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            padding: 10px;
+            flex: 1 1 120px;
+            text-align: center;
+            background: linear-gradient(45deg, #7289da, #8f94fb);
+            margin: 0 5px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            position: relative;
+            z-index: 11;
+        }
+        .nav a:hover {
+            background: linear-gradient(45deg, #677bc4, #7e88e8);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(103, 123, 196, 0.5);
+        }
+        .nav a.active {
+            background: linear-gradient(45deg, #ff6f61, #ff9a76);
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(255, 111, 97, 0.6);
+        }
+        .main {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+            z-index: 10;
+        }
+        .content {
+            display: none;
+            background: rgba(54, 57, 63, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(20px);
+        }
+        .content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .content img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 2px solid #7289da;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+        }
+        .content.active img {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .content h2 {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .content p {
+            color: #b9bbbe;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .download-links a {
+            display: inline-block;
+            color: #ffffff;
+            font-size: 36px;
+            font-weight: 600;
+            text-decoration: none;
+            margin: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #7289da, #8f94fb);
+            border-radius: 8px;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .download-links a:hover {
+            background: linear-gradient(45deg, #677bc4, #7e88e8);
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(103, 123, 196, 0.5);
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #36393f, #2f3136);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            transform: scale(0);
+            transition: transform 0.5s ease;
+            position: relative;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        .modal-content h2 {
+            color: #ffffff;
+            font-size: 24px;
+            margin-bottom: 20px;
+            animation: none;
+            text-align: center;
+        }
+        .modal-content p {
+            color: #b9bbbe;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        .modal-content button {
+            background: linear-gradient(45deg, #7289da, #8f94fb);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .modal-content button:hover {
+            background: linear-gradient(45deg, #677bc4, #7e88e8);
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(103, 123, 196, 0.5);
+        }
+        .chat-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            background: #18191c;
+            border: 1px solid #c7c5c7;
+            margin-top: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: translate(10px, -10px) rotate(1deg);
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.5), -5px -5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .chat-header {
+            background: #1a1d21;
+            padding: 5px 10px;
+            border-bottom: 1px solid #2c2f33;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #b9bbbe;
+            font-size: 14px;
+        }
+        .chat-header .title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        .chat-header .title img {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            vertical-align: middle;
+            border: none;
+        }
+        .chat-header .status {
+            display: flex;
+            align-items: center;
+        }
+        .chat-header .status span {
+            margin-left: 5px;
+        }
+        .chat-input {
+            background: #2c2f33;
+            padding: 5px 10px;
+            border-top: 1px solid #2c2f33;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #72767d;
+            font-size: 12px;
+            position: relative;
+        }
+        .chat-input .user {
+            color: #1e90ff;
+            text-align: center;
+            flex-grow: 1;
+        }
+        .chat-input .icons {
+            position: absolute;
+            right: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .chat-input .icons span {
+            margin-left: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 5px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .chat-messages::-webkit-scrollbar {
+            display: none;
+        }
+        .chat-messages {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .chat-message {
+            display: flex;
+            align-items: center;
+            margin: 2px 0;
+            font-size: 12px;
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+            line-height: 1;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .chat-timestamp {
+            margin-right: 5px;
+            font-size: 10px;
+            color: #72767d;
+        }
+        .chat-badge {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 3px;
+            border: none !important;
+            border-radius: 0 !important;
+            object-fit: contain;
+            box-shadow: none !important;
+        }
+        .chat-emote {
+            width: 30px;
+            height: 30px;
+            vertical-align: middle;
+            margin-right: 3px;
+            border: none !important;
+            position: relative;
+            top: -1px;
+        }
+        .chat-username {
+            margin-right: 3px;
+            font-weight: bold;
+            font-size: 12px;
+            color: inherit;
+        }
+        .chat-username.animated-color {
+            animation: colorSwitch 3s infinite ease-in-out;
+            font-weight: bold;
+        }
+        .chat-mention.animated-mention {
+            animation: colorSwitch 3s infinite ease-in-out;
+            font-weight: bold;
+        }
+        @keyframes colorSwitch {
+            0% { color: #FFD700; }
+            50% { color: #1E90FF; }
+            100% { color: #FFD700; }
+        }
+        .chat-text {
+            color: #e0e0e0;
+            font-size: 12px;
+        }
+        .chat-mention {
+            font-weight: bold;
+        }
+        .chat-footer {
+            background: #2c2f33;
+            padding: 5px 10px;
+            border-top: 1px solid #2c2f33;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #72767d;
+            font-size: 12px;
+        }
+        .chat-footer .user {
+            color: #1e90ff;
+        }
+        .poop {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow-orb large" style="top: 10%; left: 10%;"></div>
+        <div class="glow-orb" style="top: 20%; left: 85%;"></div>
+        <div class="glow-orb large" style="top: 35%; left: 25%;"></div>
+        <div class="glow-orb" style="top: 50%; left: 70%;"></div>
+        <div class="glow-orb" style="top: 65%; left: 15%;"></div>
+        <div class="glow-orb large" style="top: 80%; left: 90%;"></div>
+        <div class="glow-orb" style="top: 90%; left: 30%;"></div>
+        <div class="sparkle" style="top: 15%; left: 20%;"></div>
+        <div class="sparkle" style="top: 25%; left: 75%;"></div>
+        <div class="sparkle" style="top: 40%; left: 35%;"></div>
+        <div class="sparkle" style="top: 55%; left: 80%;"></div>
+        <div class="sparkle" style="top: 70%; left: 25%;"></div>
+        <div class="sparkle" style="top: 85%; left: 60%;"></div>
+    </div>
+    <div class="stickman" id="stickman">
+        <svg width="100" height="150" viewBox="0 0 100 150">
+            <circle cx="50" cy="30" r="20" fill="#7289da" stroke="#ffffff" stroke-width="2"/>
+            <text id="stickman-face" x="50" y="51" text-anchor="middle" font-size="50">😱</text>
+            <line id="body" x1="50" y1="50" x2="50" y2="90" stroke="#ffffff" stroke-width="4"/>
+            <line id="left-arm" x1="30" y1="60" x2="50" y2="60" stroke="#ffffff" stroke-width="4"/>
+            <line id="right-arm" x1="50" y1="60" x2="70" y2="60" stroke="#ffffff" stroke-width="4"/>
+            <line id="left-leg" x1="50" y1="90" x2="30" y2="130" stroke="#ffffff" stroke-width="4"/>
+            <line id="right-leg" x1="50" y1="90" x2="70" y2="130" stroke="#ffffff" stroke-width="4"/>
+        </svg>
+    </div>
+    <div class="modal-overlay" id="welcome-modal">
+        <div class="modal-content">
+            <h2>PROČ CHATTERINO?</h2>
+            <p>Chatterino obsahuje vše co ke své twitch experience potřebuješ. Ať už VŠECHNY druhy emotů FFZ/BTTV/7TV/HOMIES nebo možnost mít mnoho chatů otevřených najendou.</p>
+            <p>Tento tutoriál je jen pro určité verze. Zde máš prvně obecné nastavení. Pokud tě zajímá něco specifického k těm verzím, tak ↓</p>
+            <p>v DOWNLOADS můžeš vybrat verzi a zbytek uvidíš sám.</p>
+            <button id="reveal-content-button">POKRAČOVAT</button>
+        </div>
+    </div>
+    <div class="header">
+        CHATTERINO TUTORIAL | 2025 REMAKE
+    </div>
+    <div class="nav">
+        <a href="#" data-section="general">GENERAL</a>
+        <a href="#" data-section="links">IMAGES</a>
+        <a href="#" data-section="nicknames">NICKNAMES</a>
+        <a href="#" data-section="commands">COMMANDS</a>
+        <a href="#" data-section="highlights">HIGHLIGHTS</a>
+        <a href="#" data-section="ignores">IGNORES</a>
+        <a href="#" data-section="live_not">LIVE_NOTIF</a>
+        <a href="#" data-section="other">OTHER</a>
+        <a href="#" data-section="roomky">ROOMKY</a>
+        <a href="#" data-section="kontakt">KONTAKT</a>
+        <a href="#" data-section="DOWNLOADS">DOWNLOADS</a>
+    </div>
+    <div class="main">
+        <div id="general" class="content">
+            <h2 id="general-title"></h2>
+            <p id="general-text"></p>
+            <p id="general-text-specific"></p>
+            <img src="./img/general.png" alt="General Image">
+        </div>
+        <div id="links" class="content">
+            <h2 id="links-title"></h2>
+            <p id="links-text"></p>
+            <p id="links-text-specific"></p>
+            <img src="./img/links1.png" alt="Channels Image">
+            <img src="./img/links2.png" alt="Channels Image">
+            <img src="./img/links3.png" alt="Channels Image">
+        </div>
+        <div id="nicknames" class="content">
+            <h2 id="nicknames-title"></h2>
+            <p id="nicknames-text"></p>
+            <p id="nicknames-text-specific"></p>
+            <img src="./img/nicknames.png" alt="Nicknames Image">
+            <img src="./img/nicknames2.png" alt="Nicknames Image">
+        </div>
+        <div id="commands" class="content">
+            <h2 id="commands-title"></h2>
+            <p id="commands-text"></p>
+            <p id="commands-text-specific"></p>
+            <img src="./img/commands.png" alt="Commands Image">
+            <img src="./img/commands2.png" alt="Commands Image">
+        </div>
+        <div id="highlights" class="content">
+            <h2 id="highlights-title"></h2>
+            <p id="highlights-text"></p>
+            <p id="highlights-text-specific"></p>
+            <img src="./img/highlights.png" alt="Commands Image">
+        </div>
+        <div id="ignores" class="content">
+            <h2 id="ignores-title"></h2>
+            <p id="ignores-text"></p>
+            <p id="ignores-text-specific"></p>
+            <img src="./img/ignores.png" alt="Commands Image">
+            <img src="./img/ignores2.png" alt="Commands Image">
+        </div>
+        <div id="live_not" class="content">
+            <h2 id="live_not-title"></h2>
+            <p id="live_not-text"></p>
+            <p id="live_not-text-specific"></p>
+            <img src="./img/live.png" alt="Commands Image">
+            <img src="./img/live2.png" alt="Commands Image">
+        </div>
+        <div id="other" class="content">
+            <h2 id="other-title"></h2>
+            <p id="other-text"></p>
+            <p id="other-text-specific"></p>
+            <img src="./img/bonus1.png" alt="Commands Image">
+            <img src="./img/bonus2.png" alt="Commands Image">
+            <img src="./img/bonus3.png" alt="Commands Image">
+        </div>
+        <div id="roomky" class="content">
+            <h2 id="roomky-title"></h2>
+            <p id="roomky-text"></p>
+            <img src="./img/ukazka.png" alt="Commands Image">
+            <p id="roomky-text-specific"></p>
+            <img src="./img/roomky1.png" alt="Commands Image">
+            <img src="./img/roomky2.png" alt="Commands Image">
+            <img src="./img/roomky3.png" alt="Commands Image">
+        </div>
+        <div id="kontakt" class="content">
+            <h2 id="kontakt-title"></h2>
+            <p id="kontakt-text"></p>
+            <p id="kontakt-text-specific"></p>
+            <div class="chat-container">
+                <div class="chat-header">
+                    <span class="title"><img src="./img/logo.png" alt="Chatterino Icon">Chatterino 7.5.2H Homies</span>
+                    <div class="status">
+                        <span>username</span>
+                        <span>⚙️</span>
+                        <span>_</span>
+                        <span>▢</span>
+                        <span>X</span>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <span class="user">tm_o7</span>
+                    <div class="icons">
+                        <span>🗡️</span>
+                        <span>👥</span>
+                        <span>…</span>
+                        <span>+</span>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chat-messages"></div>
+                <div class="chat-footer">
+                    <span>Send message as <span class="user">username</span>...</span>
+                    <span>😊</span>
+                </div>
+            </div>
+        </div>
+        <div id="DOWNLOADS" class="content">
+            <h2 id="DOWNLOADS-title"></h2>
+            <p id="DOWNLOADS-text"></p>
+            <div class="download-links">
+                <a href="homies.html" target="_blank">HOMIES</a>
+                <a href="nightly.html" target="_blank">NIGHTLY</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        const contentData = {
+            general: {
+                title: "Hlavní nastavení",
+                text: "Zde si můžeš nastavit hlavní nastavení textu, velikosti písma a podobně.",
+                textSpecific: "Na obrázku můžeš vidět příklad jako třeba font, velikosti, zapnutí chatterina s windows nebo třeba always on top."
+            },
+            links: {
+                title: "Obrázky",
+                text: "Chceš jednoduše někomu poslat screen a nechce se ti otevírat žádná stránka k tomu?",
+                textSpecific: "Stačí si vybrat a přepsat jednu z těchto variant a pak už jen hodit to ctrl v do chatterina!"
+            },
+            nicknames: {
+                title: "Nicknames",
+                text: "Tady můžeš každému specifickému uživateli dát nějaký nickname.",
+                textSpecific: "Pak na druhou stranu neuvidíš normální jména a v některých případech budeš mít jednoho chattera na 5 řádků 😐"
+            },
+            commands: {
+                title: "Commands",
+                text: "Příkazy slouží k ulehčení tvé práce, ukládání funny zpráv, linků, copy past a podobně",
+                textSpecific: "Stačí jen do chatu napsat to co je pod hodnotou Trigger"
+            },
+            highlights: {
+                title: "Highlights",
+                text: "Highlights slouží k pingům na určité slova/varianty jmen apod.",
+                textSpecific: "Můžeš si u nich změnit zvuk, barvu pingu, regex (tom s regexem by fungoval i v poTOMek) atd."
+            },
+            ignores: {
+                title: "Ignores",
+                text: "Nastavení ignorů k určitým slovům/frázím či uživatelům",
+                textSpecific: "Pokud zaškrtneš block tak žádnou zprávu s tímto neuvidíš vůbec. Jinak uvidíš to co je zapsané v replacementu. a jinak si můžeš pořešit regex nebo case senzivitu jak je potřeba"
+            },
+            live_not: {
+                title: "Live Notifications",
+                text: "Vyber si kanály, u kterých chceš dostávat ping oznámení, že jsou live",
+                textSpecific: "Je nutné mít otevřenou roomku /live viz. 2. obrázek"
+            },
+            other: {
+                title: "Other",
+                text: "Tady jsou ukázané nějaké ostatní věci co můžou být užitečné k zapnutí",
+                textSpecific: "No.. musíš si je v tom search baru najít 😜"
+            },
+            roomky: {
+                title: "Roomky",
+                text: "Zde je preview roomek užitečných k využití",
+                textSpecific: "Ukázka funkčnosti roomek:"
+            },
+            kontakt: {
+                title: "Kontakt",
+                text: "Tvůrce stránky jsem já TOM.",
+                textSpecific: "Pokud tě něco bude zajímat ohledně dalších funkcí nebo něčeho, co jsem nevysvětlil dost podrobně, přidej si do chatterina 'tm_o7' a zeptej se osobně!"
+            },
+            DOWNLOADS: {
+                title: "Downloads | NE NESTÁHNE TI JE TO",
+                text: "KLIKNI NA JEDNO Z TĚCH TLAČÍTEK A PŘEČTI SI INFORMACE JAK NA TO 🫢",
+                textSpecific: ""
+            }
+        };
+
+        const navLinks = document.querySelectorAll('.nav a');
+        const contents = document.querySelectorAll('.content');
+        const modal = document.getElementById('welcome-modal');
+        const revealButton = document.getElementById('reveal-content-button');
+        const stickman = document.getElementById('stickman');
+        const stickmanFace = document.getElementById('stickman-face');
+        let isModalOpen = true;
+
+        // Simplified text typing function
+        function typeText(element, text, speed = 50) {
+            let i = 0;
+            element.textContent = '';
+            const interval = setInterval(() => {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, speed);
+        }
+
+        // Stickman Animations with GSAP
+        function animateStickman() {
+            gsap.to('#left-arm', {
+                rotation: 30,
+                transformOrigin: 'right',
+                repeat: -1,
+                yoyo: true,
+                duration: 0.8,
+                ease: 'sine.inOut'
+            });
+            gsap.to('#right-arm', {
+                rotation: -30,
+                transformOrigin: 'left',
+                repeat: -1,
+                yoyo: true,
+                duration: 0.8,
+                ease: 'sine.inOut',
+                delay: 0.4
+            });
+            gsap.to('#left-leg', {
+                rotation: 20,
+                transformOrigin: 'top',
+                repeat: -1,
+                yoyo: true,
+                duration: 0.6,
+                ease: 'sine.inOut'
+            });
+            gsap.to('#right-leg', {
+                rotation: -20,
+                transformOrigin: 'top',
+                repeat: -1,
+                yoyo: true,
+                duration: 0.6,
+                ease: 'sine.inOut',
+                delay: 0.3
+            });
+            gsap.to('#body', {
+                y: 5,
+                repeat: -1,
+                yoyo: true,
+                duration: 0.5,
+                ease: 'sine.inOut'
+            });
+        }
+        animateStickman();
+        stickman.addEventListener('click', () => {
+            const poop = document.createElement('div');
+            poop.className = 'poop';
+            poop.textContent = '💦';
+            stickman.appendChild(poop);
+            gsap.to(poop, {
+                y: 50,
+                opacity: 1,
+                duration: 0.5,
+                ease: 'power2.out',
+                onComplete: () => {
+                    gsap.to(poop, {
+                        opacity: 0,
+                        duration: 0.3,
+                        onComplete: () => poop.remove()
+                    });
+                }
+            });
+            gsap.to('#body', {
+                y: 10,
+                duration: 0.2,
+                yoyo: true,
+                repeat: 1,
+                ease: 'power2.in'
+            });
+        });
+        const downloadsLink = document.querySelector('a[data-section="DOWNLOADS"]');
+        downloadsLink.addEventListener('mouseenter', () => {
+            stickmanFace.textContent = '🤑';
+        });
+        downloadsLink.addEventListener('mouseleave', () => {
+            stickmanFace.textContent = '😱';
+        });
+        window.addEventListener('load', () => {
+            modal.classList.add('active');
+            gsap.to(modal, { opacity: 1, duration: 0.5, ease: 'power2.out' });
+            gsap.to('.modal-content', { scale: 1, duration: 0.5, ease: 'back.out(1.7)' });
+            document.body.style.overflow = 'hidden';
+        });
+
+        revealButton.addEventListener('click', () => {
+            gsap.to('.modal-content', {
+                scale: 0,
+                duration: 0.3,
+                ease: 'back.in(1.7)',
+                onComplete: () => {
+                    gsap.to(modal, {
+                        opacity: 0,
+                        duration: 0.3,
+                        onComplete: () => {
+                            modal.classList.remove('active');
+                            document.body.style.overflow = '';
+                            isModalOpen = false;
+                            const defaultSection = document.getElementById('general');
+                            defaultSection.classList.add('active');
+                            navLinks.forEach(link => link.classList.remove('active'));
+                            document.querySelector('a[data-section="general"]').classList.add('active');
+                            const data = contentData.general;
+                            typeText(document.getElementById('general-title'), data.title, 50);
+                            setTimeout(() => {
+                                typeText(document.getElementById('general-text'), data.text, 30);
+                                if (data.textSpecific) {
+                                    setTimeout(() => {
+                                        typeText(document.getElementById('general-text-specific'), data.textSpecific, 30);
+                                    }, data.text.length * 30);
+                                }
+                            }, data.title.length * 50);
+                            gsap.to(defaultSection, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+                            gsap.to(defaultSection.querySelectorAll('img'), { opacity: 1, scale: 1, duration: 0.5, ease: 'power2.out', stagger: 0.2 });
+                        }
+                    });
+                }
+            });
+        });
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!isModalOpen) {
+                    const section = link.getAttribute('data-section');
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    contents.forEach(content => {
+                        content.classList.remove('active');
+                        gsap.to(content, { opacity: 0, y: 20, duration: 0.3 });
+                    });
+                    setTimeout(() => {
+                        const activeContent = document.getElementById(section);
+                        if (activeContent) {
+                            activeContent.classList.add('active');
+                            gsap.to(activeContent, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+                            gsap.to(activeContent.querySelectorAll('img'), { opacity: 1, scale: 1, duration: 0.5, ease: 'power2.out', stagger: 0.2 });
+                            const data = contentData[section];
+                            typeText(document.getElementById(`${section}-title`), data.title, 50);
+                            setTimeout(() => {
+                                typeText(document.getElementById(`${section}-text`), data.text, 30);
+                                if (data.textSpecific) {
+                                    setTimeout(() => {
+                                        typeText(document.getElementById(`${section}-text-specific`), data.textSpecific, 30);
+                                    }, data.text.length * 30);
+                                }
+                            }, data.title.length * 50);
+                            if (section === 'kontakt') {
+                                startChat();
+                            }
+                        }
+                    }, 300);
+                }
+            });
+        });
+        function getCurrentTime() {
+            const now = new Date();
+            return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        }
+
+        const emotes = {
+            ':bouracka:': './emotes/bouracka.gif',
+            ':patek:': './emotes/patek.gif',
+            ':SourPls:': './emotes/SourPls.gif',
+            ':RainbowPls:': './emotes/RainbowPls.gif',
+            ':aoj:': './emotes/aoj.gif',
+            ':flygunLove:': './emotes/flygunLove.png',
+            ':agrLULE:': './emotes/agrLULE.png',
+            ':agrE:': './emotes/agrE.png',
+            ':potato:': './emotes/potato.png',
+            ':haiset:': './emotes/haiset.gif',
+            ':hot:': './emotes/hot.png',
+            ':sadding:': './emotes/sadding.png',
+            ':gachiHYPER:': './emotes/gachiHYPER.gif',
+            ':ze:': './emotes/ze.png',
+            ':meow:': './emotes/meow.gif',
+            ':kek:': './emotes/kek.gif',
+            ':trivia:': './emotes/trivia.png',
+            ':BLEHHHH:': './emotes/BLEHHHH.png',
+            ':eyeroll:': './emotes/eyeroll.gif',
+            ':Keepo:': './emotes/Keepo.png',
+            ':Rave:': './emotes/knefi.gif'
+        };
+
+        const customMessages = [
+            {
+                username: 'tm_o7:',
+                badge: ['./badge/broadcaster.png', './badge/sub.png', './badge/DJ.png', './badge/supporter.png', './badge/tm.gif'],
+                color: '#fe1243',
+                message: 'Tak to je bouračka :bouracka:'
+            },
+            {
+                username: 'BobTheBuilder_98:',
+                badge: ['./badge/mod.png', './badge/Love.png', './badge/FFZ.png', './badge/bobik.gif','./badge/Hsupporter.png'],
+                color: '#ffffff',
+                message: 'Konečně :patek:'
+            },
+            {
+                username: 'Matysek__:',
+                badge: './badge/supporter.png',
+                color: '#776ff7',
+                message: ':SourPls:'
+            },
+            {
+                username: 'Kistzu:',
+                badge: '',
+                color: '#ff0000',
+                message: ':RainbowPls:'
+            },
+            {
+                username: 'Roxy_mm:',
+                badge: './badge/vip.png',
+                color: '#ffd700',
+                message: 'Ive got a special power 🪄 🌊 That Im not afraid to use 👊 So come on this is my adventure 🙌 🌊 This is my fantasy ✨ Its all about living in the ocean 🌊 Being wild and free 🧜 Cause Im no ordinary girl 👧 Im from the deep blue underworld 🐬 🌊 Land or sea 🏝️ ️ 🌊 Ive got the power if I just believe 🙏 👼 Cause Im no ordinary girl 👧 Im from the deep blue underworld 🐬 🌊 Land or sea 🏝️ ️ 🌊 The worlds my oyster, Im the pearl 💎 No ordinary girl '
+            },
+            {
+                username: 'vercunkas:',
+                badge: './badge/Love.png',
+                color: '#ffb6c1',
+                message: ':aoj:'
+            },
+            {
+                username: 'gta125:',
+                badge: ['./badge/vip.png', './badge/Love.png'],
+                color: '#daa520',
+                message: ':flygunLove:'
+            },
+            {
+                username: 'MaraCroft01:',
+                badge: ['./badge/mod.png', './badge/Mara.png'],
+                color: '#44798a',
+                message: '@tm_o7, jsi :hot:'
+            },
+            {
+                username: 'tm_o7:',
+                badge: ['./badge/broadcaster.png', './badge/sub.png', './badge/DJ.png', './badge/supporter.png', './badge/tm.gif',],
+                color: '#fe1243',
+                message: '@MaraCroft01, juj děkuju 🥺, ale ty víc :gachiHYPER:'
+            },
+            {
+                username: 'HaiseT:',
+                badge: ['./badge/mod.png', './badge/verified.png', './badge/supporter.png', './badge/7Founder.png',],
+                color: '#00ff8a',
+                message: 'a on mi pak napsal :agrLULE: jsem si nevzal brášky na hlavu :agrE:'
+            },
+            {
+                username: 'pivni_kettlebell:',
+                badge: ['./badge/vip.png', './badge/banana.png'],
+                color: '#ff69b4',
+                message: ':kek:'
+            },
+            {
+                username: 'jsem_standa:',
+                badge: ['./badge/vip.png', './badge/founder.png', './badge/banana.png', './badge/FFZ.png', './badge/golden.gif'],
+                color: '#008000',
+                message: ':potato:'
+            },
+            {
+                username: 'potatbotat:',
+                badge: './badge/mod.png',
+                color: '#ff69b4',
+                message: '@jsem_standa, 󠀀[P:1] 🕳️🥔 Potato sinkhole swallowed a portion of your harvest, disappearing into the depths! [-497 ⇒ 16,331] ⏰ 22m'
+            },
+            {
+                username: 'random_krystufek:',
+                badge: ['./badge/vip.png', './badge/cake.png'],
+                color: '#5f9ea0',
+                message: 'OmG JsEm :haiset: FaNoUšEk A NeStyDÍm se Za TO'
+            },
+            {
+                username: 'stan1czek:',
+                badge: ['./badge/mod.png', './badge/2024.png'],
+                color: '#daa520',
+                message: ':sadding:'
+            },
+            {
+                username: 'Knefi_:',
+                badge: ['./badge/staff.png', './badge/mod.png', './badge/artist.png', './badge/glitch.png'],
+                color: '#00ff9e',
+                message: ':eyeroll:'
+            },
+            {
+                username: 'ta_marlen_:',
+                badge: ['./badge/vip.png', './badge/speed.png'],
+                color: '#8a2be2',
+                message: 'co vyvádíš?'
+            },
+            {
+                username: 'nikollkkaa:',
+                badge: ['./badge/vip.png', './badge/maraton.png'],
+                color: '#ffffff',
+                message: ':ze:'
+            },
+            {
+                username: 'verunmka:',
+                badge: './badge/2023.png',
+                color: '#8a2be2',
+                message: ':meow:'
+            },
+            {
+                username: 'vecounmecoun:',
+                badge: './badge/mod.png',
+                color: '#8a2be2',
+                message: ':trivia:'
+            },
+            {
+                username: 'tm_o7:',
+                badge: ['./badge/broadcaster.png', './badge/sub.png', './badge/DJ.png', './badge/supporter.png', './badge/tm.gif',],
+                color: '#fe1243',
+                message: 'TRIVIA | [38/598] Category: Literatura | Kdo napsal dystopii Fahrenheit 451?'
+            },
+            {
+                username: 'helmutovic:',
+                badge: ['./badge/vip.png', './badge/glhf.png', './badge/helma.jpg'],
+                color: '#d2691e',
+                message: ':BLEHHHH:'
+            },
+            {
+                username: 'annatraktor04:',
+                badge: ['./badge/vip.png', './badge/cake.png', './badge/anicka.gif'],
+                color: '#ff69b4',
+                message: 'Miluju traktory'
+            },
+            {
+                username: 'lesnicka42:',
+                badge: '',
+                color: '#1e90ff',
+                message: ':meow:'
+            },
+            {
+                username: 'welfarecz:',
+                badge: './badge/gifter.png',
+                color: '#1e90ff',
+                message: '@tm_o7, bych tě nejradši udělal, aby si měl lepší noc'
+            },
+            {
+                username: 'cattynn:',
+                badge: ['./badge/2023.png', './badge/cat.png'],
+                color: '#8a2be2',
+                message: 'to bude pain jak kokot když to vidím :kek: @dejwoos,'
+            },
+            {
+                username: 'dejwoos:',
+                badge: ['./badge/2024.png', './badge/NNYS.png'],
+                color: '#1e90ff',
+                message: 'diky za pingy ty gayi'
+            },
+            {
+                username: 'DejvX_:',
+                badge: ['./badge/vip.png', './badge/ruby.png', './badge/FFZ.png', './badge/supporter.png', './badge/6m.png'],
+                color: '#00fff5',
+                message: 'to ti neodpustím'
+            },
+            {
+                username: 'mdvdkpog:',
+                badge: './badge/2023.png',
+                color: '#0000ff',
+                message: 'Tebe brzo ukončím, pokud nedostanu vysvětlení na dc'
+            },
+            {
+                username: 'ADOEEN:',
+                badge: './badge/vs.png',
+                color: '#8042ff',
+                message: '😭'
+            },
+            {
+                username: 'ReformedMartaSS:',
+                badge: ['./badge/vip.png', './badge/bit2.png'],
+                color: '#8042ff',
+                message: 'To asi bude tím banem mě chtěli varovat před tím kde nemám bejt že mi hrozí ban :Keepo:'
+            },
+            {
+                username: 'Lukynn_:',
+                badge: ['./badge/2022.png', './badge/lukyn.gif', './badge/Hsupporter.png'],
+                color: '#ff00c0.',
+                message: '☈✿✭Q✶ ŰQ▒█ ▓█ ✯✮ ✶◘✶ ✵♫Ű✰♫✯'
+            },
+            {
+                username: 'AmigoZejgyyy:',
+                badge: ['./badge/mod.png', './badge/cheer1.png', './badge/amigo.png'],
+                color: '#fe1243',
+                message: '$gpt co to znamená: ☈✿✭Q✶ ŰQ▒█ ▓█ ✯✮ ✶◘✶ ✵♫Ű✰♫✯ ? '
+            },
+            {
+                username: 'Supibot:',
+                badge: './badge/mod.png',
+                color: '#6495ed',
+                message: '@AmigoZejgyyy, 🤖 Myslíš si, že umím mluvit jazykem tohoto kmene?'
+            },
+            {
+                username: 'Knefi_:',
+                badge: ['./badge/T.jpg','./badge/E.jpg','./badge/S.jpg','./badge/T.jpg','./badge/E.jpg','./badge/R.jpg',],
+                color: '#00ff9e',
+                message: ':Rave:'
+            },
+        ];
+
+        let messageIndex = 0;
+        let messageCount = 0;
+        const MAX_MESSAGES = 50;
+
+        function addChatMessage() {
+            const chatMessages = document.getElementById('chat-messages');
+            if (!chatMessages) return;
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+
+            const timestamp = getCurrentTime();
+            const timestampSpan = document.createElement('span');
+            timestampSpan.className = 'chat-timestamp';
+            timestampSpan.textContent = timestamp;
+            messageDiv.appendChild(timestampSpan);
+
+            const message = customMessages[messageIndex];
+            if (!message) {
+                messageIndex = 0;
+                return;
+            }
+
+            if (message.badge) {
+                const badges = Array.isArray(message.badge) ? message.badge : [message.badge];
+                badges.forEach(badgePath => {
+                    if (badgePath) {
+                        const badgeImg = document.createElement('img');
+                        badgeImg.src = badgePath;
+                        badgeImg.className = 'chat-badge';
+                        messageDiv.appendChild(badgeImg);
+                    }
+                    });
+                }
+
+            const usernameSpan = document.createElement('span');
+            usernameSpan.className = 'chat-username';
+            if (message.username === 'tm_o7:') {
+                usernameSpan.classList.add('animated-color');
+            } else {
+                usernameSpan.style.color = message.color;
+            }
+            usernameSpan.textContent = message.username;
+            messageDiv.appendChild(usernameSpan);
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'chat-text';
+            let messageText = message.message;
+
+            for (const [emoteCode, emotePath] of Object.entries(emotes)) {
+                const escapedCode = emoteCode.replace(/[:]/g, '\\:');
+                const regex = new RegExp(escapedCode, 'g');
+                messageText = messageText.replace(regex, `<img src="${emotePath}" class="chat-emote" alt="${emoteCode}">`);
+            }
+
+            const mentionRegex = /@(\w+)/g;
+            messageText = messageText.replace(mentionRegex, (match, username) => {
+                if (username.toLowerCase() === 'tm_o7') {
+                    return `<span class="chat-mention animated-mention">${match}</span>`;
+                }
+                const mentionedUser = customMessages.find(msg => msg.username.toLowerCase() === `${username.toLowerCase()}:`);
+                if (mentionedUser) {
+                    return `<span class="chat-mention" style="color: ${mentionedUser.color}">${match}</span>`;
+                }
+                return match;
+            });
+
+            textSpan.innerHTML = messageText;
+            messageDiv.appendChild(textSpan);
+
+            chatMessages.appendChild(messageDiv);
+            messageCount++;
+
+            gsap.fromTo(messageDiv, 
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }
+            );
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            if (messageCount > MAX_MESSAGES) {
+                chatMessages.removeChild(chatMessages.firstChild);
+                messageCount--;
+            }
+
+            messageIndex = (messageIndex + 1) % customMessages.length;
+        }
+
+        let chatInterval;
+        function startChat() {
+            if (chatInterval) clearInterval(chatInterval);
+            messageIndex = 0;
+            messageCount = 0;
+            const chatMessages = document.getElementById('chat-messages');
+            if (chatMessages) chatMessages.innerHTML = '';
+            addChatMessage();
+            chatInterval = setInterval(addChatMessage, 2000);
+        }
+    </script>
+</body>
+</html>
